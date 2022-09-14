@@ -209,7 +209,7 @@ class UpdateSong(graphene.Mutation):
         if song_instance:
             ok = True
             records = []
-            for record_input in input.songs:
+            for record_input in input.records:
                 record = Records.objects.get(pk=record_input.id)
                 if record is None:
                     return UpdateSong(ok=False, song=None)
