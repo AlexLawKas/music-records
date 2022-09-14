@@ -180,16 +180,23 @@ class CreateSong(graphene.Mutation):
     def mutate(root, info, input=None):
         ok = True
         records = []
+        performers = []
         for record_input in input.records:
             record = Records.objects.get(pk=record_input.id)
             if record is None:
                 return CreateSong(ok=False, song=None)
             records.append(record)
+        for performer_input in input.performers:
+            performer = Performer.objects.get(pk=performer_input.id)
+            if performer is None:
+                return CreateSong(ok=False, song=None)
+            performers.append(performer)
         song_instance = Songs(
             title=input.title,
             year=input.year
         )
         song_instance.save()
+        song_instance.performer.set(performers)
         song_instance.record.set(records)
         return CreateSong(ok=ok, song=song_instance)
 
