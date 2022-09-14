@@ -66,6 +66,7 @@ class PerformerInput(graphene.InputObjectType):
     name = graphene.String()
     genre = graphene.String()
 
+
 class RecordInput(graphene.InputObjectType):
     id = graphene.ID()
     title = graphene.String()
