@@ -20,7 +20,8 @@ class Records(models.Model):
     """Пластинки/АЛьбомы"""
     title = models.CharField(max_length=100)
     year = models.IntegerField(null=True)
-    performer = models.ManyToManyField(Performer)
+    performer = models.ForeignKey(Performer, on_delete=models.CASCADE)
+    image = models.ImageField(null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -33,7 +34,7 @@ class Songs(models.Model):
     """Песни"""
     title = models.CharField(max_length=100)
     record = models.ManyToManyField(Records, null=True)
-    performer = models.ManyToManyField(Performer)
+    performer = models.ForeignKey(Performer, on_delete=models.CASCADE)
     year = models.IntegerField(null=True)
 
     def __str__(self):
