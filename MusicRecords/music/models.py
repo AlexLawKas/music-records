@@ -6,7 +6,7 @@ from django.db import models
 
 class Performer(models.Model):
     """Исполнитель"""
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     genre = models.CharField(max_length=100, null=True)
 
     def __str__(self):
@@ -33,7 +33,7 @@ class Records(models.Model):
 class Songs(models.Model):
     """Песни"""
     title = models.CharField(max_length=100)
-    record = models.ManyToManyField(Records, null=True)
+    record = models.ManyToManyField(Records, blank=True)
     performer = models.ForeignKey(Performer, on_delete=models.CASCADE)
     year = models.IntegerField(null=True)
 
