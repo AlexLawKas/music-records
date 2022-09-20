@@ -79,7 +79,7 @@ class RecordParams(graphene.InputObjectType):
 class SongParams(graphene.InputObjectType):
     id = graphene.ID()
     title = graphene.String()
-    performers = graphene.List(PerformerParams)
+    performer = graphene.Int()
     records = graphene.List(RecordParams)
     year = graphene.Int()
 
@@ -143,7 +143,6 @@ class CreateRecord(graphene.Mutation):
     errors = graphene.List(graphene.String, required=True)
     record = graphene.Field(RecordType)
 
-
     @staticmethod
     def mutate(root, info, params=None):
         ok = False
@@ -171,6 +170,7 @@ class CreateRecord(graphene.Mutation):
         else:
             return CreateRecord(errors=errors, ok=ok, record=None)
 
+
 class UpdateRecord(graphene.Mutation):
     class Arguments:
         id = graphene.Int(required=True)
@@ -182,7 +182,6 @@ class UpdateRecord(graphene.Mutation):
 
     @staticmethod
     def mutate(root, info, id, params=None):
-        ok = False
         ok = False
         errors = []
         if Records.objects.filter(title=params.title, performer=params.performer).exclude(id=id).exists():
@@ -215,58 +214,90 @@ class CreateSong(graphene.Mutation):
 
     ok = graphene.Boolean()
     song = graphene.Field(SongType)
+    errors = graphene.List(graphene.String, required=True)
 
     @staticmethod
     def mutate(root, info, params=None):
-        ok = True
+        ok = False
+        errors = []
         records = []
-        performers = []
-        for record_params in params.records:
-            record = Records.objects.get(pk=record_params.id)
-            if record is None:
-                return CreateSong(ok=False, song=None)
-            records.append(record)
-        for performer_params in params.performers:
-            performer = Performer.objects.get(pk=performer_params.id)
-            if performer is None:
-                return CreateSong(ok=False, song=None)
-            performers.append(performer)
-        song_instance = Songs(
-            title=params.title,
-            year=params.year
-        )
-        song_instance.save()
-        song_instance.performer.set(performers)
-        song_instance.record.set(records)
-        return CreateSong(ok=ok, song=song_instance)
+        if params.performer is None:
+            errors.append(f'Исполнитель должен быть указан')
+        elif not Performer.objects.filter(id=params.performer).exists():
+            errors.append(f'Исполнитель с id {params.performer} не существует')
+        if params.records is not None:
+            for record_params in params.records:
+                if not Records.objects.filter(id=record_params.id).exists():
+                    errors.append(f'Альбом с id {record_params} не существует')
+
+        if not errors:
+            performer_obj = Performer.objects.filter(pk=params.performer).get()
+            if params.records is not None:
+
+                for record_params in params.records:
+                    record = Records.objects.get(pk=record_params.id)
+                    records.append(record)
+            ok = True
+            song_instance = Songs(
+                title=params.title,
+                year=params.year,
+                performer_id=performer_obj.id,
+
+            )
+            song_instance.save()
+            song_instance.records.set(records)
+
+            return CreateSong(ok=ok, errors=errors, song=song_instance)
+        else:
+            return CreateSong(errors=errors, ok=ok, song=None)
 
 
 class UpdateSong(graphene.Mutation):
     class Arguments:
         id = graphene.Int(required=True)
-        params = RecordParams(required=True)
+        params =SongParams(required=True)
 
     ok = graphene.Boolean()
     song = graphene.Field(SongType)
+    errors = graphene.List(graphene.String, required=True)
 
     @staticmethod
     def mutate(root, info, id, params=None):
         ok = False
         song_instance = Songs.objects.get(pk=id)
         if song_instance:
-            ok = True
+            ok = False
+            errors = []
             records = []
-            for record_params in params.records:
-                record = Records.objects.get(pk=record_params.id)
-                if record is None:
-                    return UpdateSong(ok=False, song=None)
-                records.append(record)
-            song_instance.title = params.title
-            song_instance.year = params.year
-            song_instance.save()
-            song_instance.record.set(records)
-            return UpdateSong(ok=ok, song=song_instance)
-        return UpdateSong(ok=ok, song=None)
+            if params.performer is None:
+                errors.append(f'Исполнитель должен быть указан')
+            elif not Performer.objects.filter(id=params.performer).exists():
+                errors.append(f'Исполнитель с id {params.performer} не существует')
+            if params.records is not None:
+                for record_params in params.records:
+                    if not Records.objects.filter(id=record_params.id).exists():
+                        errors.append(f'Альбом с id {record_params.id} не существует')
+
+            if not errors:
+                performer_obj = Performer.objects.filter(pk=params.performer).get()
+                if params.records is not None:
+
+                    for record_params in params.records:
+                        record = Records.objects.get(pk=record_params.id)
+                        records.append(record)
+                ok = True
+                song_instance = Songs(
+                    title=params.title,
+                    year=params.year,
+                    performer_id=performer_obj.id,
+
+                )
+                song_instance.save()
+                song_instance.records.set(records)
+
+                return UpdateSong(ok=ok, errors=errors, song=song_instance)
+            else:
+                return UpdateSong(errors=errors, ok=ok, song=None)
 
 
 class Mutation(graphene.ObjectType):

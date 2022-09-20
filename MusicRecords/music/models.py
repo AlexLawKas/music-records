@@ -33,7 +33,7 @@ class Records(models.Model):
 class Songs(models.Model):
     """Песни"""
     title = models.CharField(max_length=100)
-    record = models.ManyToManyField(Records, blank=True)
+    records = models.ManyToManyField(Records, blank=True)
     performer = models.ForeignKey(Performer, on_delete=models.CASCADE)
     year = models.IntegerField(null=True)
 
