@@ -120,6 +120,19 @@ class UpdatePerformer(graphene.Mutation):
     @staticmethod
     def mutate(root, info, id, params=None):
         errors = []
+        ok = False
+        performer_exist = False
+        performers = Performer.objects.all()
+        if performers is None:
+            errors.append(f'Исполнителя с id {id} не существует')
+        else:
+            for performer in performers:
+                if performer.id == id:
+                    performer_true = True
+
+        if performer_exist is False:
+            errors.append(f'Исполнителя с id {id} не существует')
+            return UpdateSong(errors=errors, ok=ok, song=None)
         if not params.name:
             errors.append(f'{params.name} {empty_name}')
         if Performer.objects.filter(name=params.name).exclude(id=id).exists():
@@ -184,6 +197,18 @@ class UpdateRecord(graphene.Mutation):
     def mutate(root, info, id, params=None):
         ok = False
         errors = []
+        record_exist = False
+        records = Records.objects.all()
+        if records is None:
+            errors.append(f'Альбома с id {id} не существует')
+        else:
+            for record in records:
+                if record.id == id:
+                    record_true = True
+
+        if record_exist is False:
+            errors.append(f'Песни с id {id} не существует')
+            return UpdateSong(errors=errors, ok=ok, song=None)
         if Records.objects.filter(title=params.title, performer=params.performer).exclude(id=id).exists():
             errors.append(f'Альбом {params.title} уже есть у исполнителя с id {params.performer}')
 
@@ -265,6 +290,19 @@ class UpdateSong(graphene.Mutation):
     @staticmethod
     def mutate(root, info, id, params=None):
         ok = False
+        errors = []
+        song_exist = False
+        songs = Songs.objects.all()
+        if songs is None:
+            errors.append(f'Песни с id {id} не существует')
+        else:
+            for song in songs:
+                if song.id == id:
+                    song_true = True
+
+        if song_exist is False:
+            errors.append(f'Песни с id {id} не существует')
+            return UpdateSong(errors=errors, ok=ok, song=None)
         song_instance = Songs.objects.get(pk=id)
         if song_instance:
             ok = False
