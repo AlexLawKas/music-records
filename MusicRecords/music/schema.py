@@ -26,7 +26,7 @@ class Query(ObjectType):
     performer = graphene.Field(PerformerType, id=graphene.Int())
     record = graphene.Field(RecordType, id=graphene.Int())
     song = graphene.Field(SongType, id=graphene.Int())
-    performers = graphene.List(PerformerType)
+    performers = graphene.List(PerformerType, name=graphene.String(), genre=graphene.String())
     records = graphene.List(RecordType)
     songs = graphene.List(SongType)
 
@@ -53,6 +53,14 @@ class Query(ObjectType):
         return None
 
     def resolve_performers(self, info, **kwargs):
+        name = kwargs.get('name')
+        genre = kwargs.get('genre')
+        if name is not None and genre is None:
+            return Performer.objects.filter(name=name)
+        elif genre is not None and name is None:
+            return Performer.objects.filter(genre=genre)
+        elif name is not None and genre is not None:
+            return Performer.objects.filter(name=name, genre=genre)
         return Performer.objects.all()
 
     def resolve_records(self, info, **kwargs):
