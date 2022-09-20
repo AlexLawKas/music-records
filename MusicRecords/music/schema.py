@@ -229,7 +229,8 @@ class CreateSong(graphene.Mutation):
             for record_params in params.records:
                 if not Records.objects.filter(id=record_params.id).exists():
                     errors.append(f'Альбом с id {record_params} не существует')
-
+        if Songs.objects.filter(title=params.title, performer=params.performer).exists():
+            errors.append(f'Песня {params.title} уже есть у исполнителя с id {params.performer}')
         if not errors:
             performer_obj = Performer.objects.filter(pk=params.performer).get()
             if params.records is not None:
@@ -255,7 +256,7 @@ class CreateSong(graphene.Mutation):
 class UpdateSong(graphene.Mutation):
     class Arguments:
         id = graphene.Int(required=True)
-        params =SongParams(required=True)
+        params = SongParams(required=True)
 
     ok = graphene.Boolean()
     song = graphene.Field(SongType)
@@ -277,7 +278,8 @@ class UpdateSong(graphene.Mutation):
                 for record_params in params.records:
                     if not Records.objects.filter(id=record_params.id).exists():
                         errors.append(f'Альбом с id {record_params.id} не существует')
-
+            if Songs.objects.filter(title=params.title, performer=params.performer).exclude(id=id).exists():
+                errors.append(f'Песня {params.title} уже есть у исполнителя с id {params.performer}')
             if not errors:
                 performer_obj = Performer.objects.filter(pk=params.performer).get()
                 if params.records is not None:
@@ -286,12 +288,10 @@ class UpdateSong(graphene.Mutation):
                         record = Records.objects.get(pk=record_params.id)
                         records.append(record)
                 ok = True
-                song_instance = Songs(
-                    title=params.title,
-                    year=params.year,
-                    performer_id=performer_obj.id,
+                song_instance.title = params.title
+                song_instance.year = params.year
+                song_instance.performer_id = performer_obj.id
 
-                )
                 song_instance.save()
                 song_instance.records.set(records)
 
