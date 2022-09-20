@@ -24,13 +24,14 @@ class SongType(DjangoObjectType):
 
 class Query(ObjectType):
     performer = graphene.Field(PerformerType, id=graphene.Int())
-    record = graphene.Field(RecordType, id=graphene.Int())
+    record = graphene.Field(RecordType, id=graphene.Int(), title=graphene.String(), year=graphene.Int())
     song = graphene.Field(SongType, id=graphene.Int())
     performers = graphene.List(PerformerType, name=graphene.String(), genre=graphene.String())
     records = graphene.List(RecordType)
     songs = graphene.List(SongType)
 
     def resolve_performer(self, info, **kwargs):
+        info = 'Исполнитель'
         id = kwargs.get('id')
 
         if id is not None:
@@ -64,6 +65,14 @@ class Query(ObjectType):
         return Performer.objects.all()
 
     def resolve_records(self, info, **kwargs):
+        title = kwargs.get('title')
+        year = kwargs.get('year')
+        if title is not None and year is None:
+            return Records.objects.filter(title=title)
+        elif year is not None and title is None:
+            return Records.objects.filter(year=year)
+        elif title is not None and year is not None:
+            return Records.objects.filter(title=title, year=year)
         return Records.objects.all()
 
     def resolve_songs(self, info, **kwargs):
