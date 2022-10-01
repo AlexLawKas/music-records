@@ -24,11 +24,11 @@ class SongType(DjangoObjectType):
 
 class Query(ObjectType):
     performer = graphene.Field(PerformerType, id=graphene.Int())
-    record = graphene.Field(RecordType, id=graphene.Int(), title=graphene.String(), year=graphene.Int())
+    record = graphene.Field(RecordType, id=graphene.Int())
     song = graphene.Field(SongType, id=graphene.Int())
     performers = graphene.List(PerformerType, name=graphene.String(), genre=graphene.String())
-    records = graphene.List(RecordType)
-    songs = graphene.List(SongType)
+    records = graphene.List(RecordType, title=graphene.String(), year=graphene.Int())
+    songs = graphene.List(SongType, title=graphene.String(), year=graphene.Int())
 
     def resolve_performer(self, info, **kwargs):
         info = 'Исполнитель'
@@ -44,6 +44,7 @@ class Query(ObjectType):
 
         if id is not None:
             return Records.objects.get(pk=id)
+        return None
 
     def resolve_song(self, info, **kwargs):
         id = kwargs.get('id')
@@ -76,7 +77,16 @@ class Query(ObjectType):
         return Records.objects.all()
 
     def resolve_songs(self, info, **kwargs):
+        title = kwargs.get('title')
+        year = kwargs.get('year')
+        if title is not None and year is None:
+            return Songs.objects.filter(title=title)
+        elif year is not None and title is None:
+            return Songs.objects.filter(year=year)
+        elif title is not None and year is not None:
+            return Songs.objects.filter(title=title, year=year)
         return Songs.objects.all()
+
 
 
 class PerformerParams(graphene.InputObjectType):
