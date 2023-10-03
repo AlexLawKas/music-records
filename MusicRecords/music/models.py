@@ -21,7 +21,6 @@ class Records(models.Model):
     title = models.CharField(max_length=100)
     year = models.IntegerField(null=True)
     performer = models.ForeignKey(Performer, on_delete=models.CASCADE)
-    image = models.ImageField(null=True, blank=True)
 
     def __str__(self):
         return self.title

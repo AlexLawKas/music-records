@@ -100,7 +100,6 @@ class RecordParams(graphene.InputObjectType):
     title = graphene.String()
     performer = graphene.Int()
     year = graphene.Int()
-    image = graphene.String()
 
 
 class SongParams(graphene.InputObjectType):
@@ -203,7 +202,6 @@ class CreateRecord(graphene.Mutation):
                 title=params.title,
                 year=params.year,
                 performer_id=performer_obj.id,
-                image=params.image
             )
             record_instance.save()
             return CreateRecord(ok=ok, errors=errors, record=record_instance)
