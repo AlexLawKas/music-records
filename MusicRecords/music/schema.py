@@ -156,11 +156,13 @@ class UpdatePerformer(graphene.Mutation):
                 if performer.id == id:
                     performer_true = True
 
-        if performer_exist is False:
+        if Performer.objects.filter(name=params.id).exclude(id=id).exists():
             errors.append(f'Исполнителя с id {id} не существует')
             return UpdateSong(errors=errors, ok=ok, song=None)
         if not params.name:
-            errors.append(f'{params.name} {empty_name}')
+            errors.append(f'Название {empty_name}')
+        if not params.genre:
+            errors.append(f'Жанр {empty_name}')
         if Performer.objects.filter(name=params.name).exclude(id=id).exists():
             errors.append(f'Исполнитель с таким названием {params.name} {exist}')
         performer_instance = Performer.objects.get(pk=id)
@@ -230,10 +232,10 @@ class UpdateRecord(graphene.Mutation):
             for record in records:
                 if record.id == id:
                     record_true = True
-
-        if record_exist is False:
-            errors.append(f'Песни с id {id} не существует')
-            return UpdateSong(errors=errors, ok=ok, song=None)
+        #
+        # if record_exist is False:
+        #     errors.append(f'Песни с id {id} не существует')
+        #     return UpdateSong(errors=errors, ok=ok, song=None)
         if Records.objects.filter(title=params.title, performer=params.performer).exclude(id=id).exists():
             errors.append(f'Альбом {params.title} уже есть у исполнителя с id {params.performer}')
 
@@ -250,7 +252,6 @@ class UpdateRecord(graphene.Mutation):
             record_instance.title = params.title
             record_instance.year = params.year
             record_instance.performer_id = performer_obj.id
-            record_instance.image = params.image
 
             record_instance.save()
             return UpdateRecord(ok=ok, errors=errors, record=record_instance)
