@@ -317,18 +317,7 @@ class UpdateSong(graphene.Mutation):
     def mutate(root, info, id, params=None):
         ok = False
         errors = []
-        song_exist = False
-        songs = Songs.objects.all()
-        if songs is None:
-            errors.append(f'Песни с id {id} не существует')
-        else:
-            for song in songs:
-                if song.id == id:
-                    song_true = True
 
-        if song_exist is False:
-            errors.append(f'Песни с id {id} не существует')
-            return UpdateSong(errors=errors, ok=ok, song=None)
         song_instance = Songs.objects.get(pk=id)
         if song_instance:
             ok = False
@@ -344,24 +333,29 @@ class UpdateSong(graphene.Mutation):
                         errors.append(f'Альбом с id {record_params.id} не существует')
             if Songs.objects.filter(title=params.title, performer=params.performer).exclude(id=id).exists():
                 errors.append(f'Песня {params.title} уже есть у исполнителя с id {params.performer}')
-            if not errors:
-                performer_obj = Performer.objects.filter(pk=params.performer).get()
-                if params.records is not None:
-
-                    for record_params in params.records:
-                        record = Records.objects.get(pk=record_params.id)
-                        records.append(record)
-                ok = True
-                song_instance.title = params.title
-                song_instance.year = params.year
-                song_instance.performer_id = performer_obj.id
-
-                song_instance.save()
-                song_instance.records.set(records)
-
-                return UpdateSong(ok=ok, errors=errors, song=song_instance)
-            else:
+        else:
+            song_exist = False
+            if song_exist is False:
+                errors.append(f'Песни с id {id} не существует')
                 return UpdateSong(errors=errors, ok=ok, song=None)
+        if not errors:
+            performer_obj = Performer.objects.filter(pk=params.performer).get()
+            if params.records is not None:
+
+                for record_params in params.records:
+                    record = Records.objects.get(pk=record_params.id)
+                    records.append(record)
+            ok = True
+            song_instance.title = params.title
+            song_instance.year = params.year
+            song_instance.performer_id = performer_obj.id
+
+            song_instance.save()
+            song_instance.records.set(records)
+
+            return UpdateSong(ok=ok, errors=errors, song=song_instance)
+        else:
+            return UpdateSong(errors=errors, ok=ok, song=None)
 
 
 class Mutation(graphene.ObjectType):
